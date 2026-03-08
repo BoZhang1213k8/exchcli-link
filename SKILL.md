@@ -20,7 +20,7 @@ description: 通过 DavMail + mbsync + mu 打通 Exchange CLI 邮件工作流，
 
 - `~/.davmail.properties`
 - `~/.mbsyncrc`
-- `~/Mail/IWhale/`（Maildir 根目录）
+- `~/Mail/<MAILDIR_ROOT>/`（Maildir 根目录）
 
 仅在用户明确要求时修改这些配置；修改前先读取原始内容并保留既有字段。
 
@@ -34,7 +34,7 @@ description: 通过 DavMail + mbsync + mu 打通 Exchange CLI 邮件工作流，
 | --- | --- | --- |
 | `health.imap` | 检查 DavMail IMAP 端口连通性 | `nc -z 127.0.0.1 11143` |
 | `health.smtp` | 检查 DavMail SMTP 端口连通性 | `nc -z 127.0.0.1 11025` |
-| `health.maildir` | 检查 Maildir 根目录存在性 | `test -d ~/Mail/IWhale` |
+| `health.maildir` | 检查 Maildir 根目录存在性 | `test -d ~/Mail/<MAILDIR_ROOT>` |
 | `health.mu_db` | 检查 mu 索引库可读 | `mu info` |
 | `health.binary_mbsync` | 检查 mbsync 可执行 | `command -v mbsync` |
 | `health.binary_mu` | 检查 mu 可执行 | `command -v mu` |
@@ -53,24 +53,24 @@ description: 通过 DavMail + mbsync + mu 打通 Exchange CLI 邮件工作流，
 
 | 原语 ID | 作用 | 命令模板 |
 | --- | --- | --- |
-| `sync.only` | 执行远程到本地同步 | `mbsync iwhale-sync` |
+| `sync.only` | 执行远程到本地同步 | `mbsync <SYNC_CHANNEL>` |
 | `index.refresh` | 重建 mu 索引 | `mu index` |
-| `sync.full` | 同步并索引 | `mbsync iwhale-sync && mu index` |
-| `sync.unlock` | 清理锁文件 | `rm -f ~/Mail/IWhale/*/.lock ~/Mail/IWhale/*/*/.lock 2>/dev/null` |
-| `sync.retry_locked` | 锁冲突后恢复并重试 | `rm -f ~/Mail/IWhale/*/.lock ~/Mail/IWhale/*/*/.lock 2>/dev/null && mbsync iwhale-sync && mu index` |
-| `sync.pull_inbox_only` | 仅同步 Inbox（按命名匹配） | `mbsync iwhale-sync -V` |
-| `sync.dry_run` | 打印同步过程（调试） | `mbsync -n -V iwhale-sync` |
+| `sync.full` | 同步并索引 | `mbsync <SYNC_CHANNEL> && mu index` |
+| `sync.unlock` | 清理锁文件 | `rm -f ~/Mail/<MAILDIR_ROOT>/*/.lock ~/Mail/<MAILDIR_ROOT>/*/*/.lock 2>/dev/null` |
+| `sync.retry_locked` | 锁冲突后恢复并重试 | `rm -f ~/Mail/<MAILDIR_ROOT>/*/.lock ~/Mail/<MAILDIR_ROOT>/*/*/.lock 2>/dev/null && mbsync <SYNC_CHANNEL> && mu index` |
+| `sync.pull_inbox_only` | 仅同步 Inbox（按命名匹配） | `mbsync <SYNC_CHANNEL> -V` |
+| `sync.dry_run` | 打印同步过程（调试） | `mbsync -n -V <SYNC_CHANNEL>` |
 
 ### D. Maildir 状态原语
 
 | 原语 ID | 作用 | 命令模板 |
 | --- | --- | --- |
-| `maildir.list_folders` | 列出 Maildir 目录 | `ls -1 ~/Mail/IWhale` |
-| `maildir.inbox_new_count` | 统计 Inbox/new 条目数 | `ls -A ~/Mail/IWhale/Inbox/new \| wc -l` |
-| `maildir.inbox_cur_count` | 统计 Inbox/cur 条目数 | `ls -A ~/Mail/IWhale/Inbox/cur \| wc -l` |
-| `maildir.folder_new_count` | 统计任意目录 new 条目 | `ls -A ~/Mail/IWhale/<folder>/new \| wc -l` |
-| `maildir.folder_cur_count` | 统计任意目录 cur 条目 | `ls -A ~/Mail/IWhale/<folder>/cur \| wc -l` |
-| `maildir.disk_usage` | 查看本地邮件目录容量 | `du -sh ~/Mail/IWhale` |
+| `maildir.list_folders` | 列出 Maildir 目录 | `ls -1 ~/Mail/<MAILDIR_ROOT>` |
+| `maildir.inbox_new_count` | 统计 Inbox/new 条目数 | `ls -A ~/Mail/<MAILDIR_ROOT>/Inbox/new \| wc -l` |
+| `maildir.inbox_cur_count` | 统计 Inbox/cur 条目数 | `ls -A ~/Mail/<MAILDIR_ROOT>/Inbox/cur \| wc -l` |
+| `maildir.folder_new_count` | 统计任意目录 new 条目 | `ls -A ~/Mail/<MAILDIR_ROOT>/<folder>/new \| wc -l` |
+| `maildir.folder_cur_count` | 统计任意目录 cur 条目 | `ls -A ~/Mail/<MAILDIR_ROOT>/<folder>/cur \| wc -l` |
+| `maildir.disk_usage` | 查看本地邮件目录容量 | `du -sh ~/Mail/<MAILDIR_ROOT>` |
 
 ### E. 检索原语（mu find JSON）
 
@@ -122,7 +122,7 @@ description: 通过 DavMail + mbsync + mu 打通 Exchange CLI 邮件工作流，
 | `diag.mu_info` | 查看 mu 数据库信息 | `mu info` |
 | `diag.mu_fields` | 查看可搜索字段 | `mu fields` |
 | `diag.mu_help_find` | 查看 find 帮助 | `mu find --help` |
-| `diag.mbsync_verbose` | 同步详细日志 | `mbsync -V iwhale-sync` |
+| `diag.mbsync_verbose` | 同步详细日志 | `mbsync -V <SYNC_CHANNEL>` |
 | `diag.msmtp_serverinfo` | 查看 SMTP server 能力 | `msmtp --serverinfo --host=127.0.0.1 --port=11025` |
 
 参数约定：
@@ -166,21 +166,21 @@ description: 通过 DavMail + mbsync + mu 打通 Exchange CLI 邮件工作流，
 
 当 `mbsync` 报错包含 `is locked`：
 
-1. 删除 `~/Mail/IWhale/` 下残留 `.lock` 文件。
-2. 重试 `mbsync iwhale-sync`。
+1. 删除 `~/Mail/<MAILDIR_ROOT>/` 下残留 `.lock` 文件。
+2. 重试 `mbsync <SYNC_CHANNEL>`。
 3. 成功后执行 `mu index`。
 
 建议命令：
 
 ```bash
-rm -f ~/Mail/IWhale/**/.lock 2>/dev/null
-mbsync iwhale-sync && mu index
+rm -f ~/Mail/<MAILDIR_ROOT>/**/.lock 2>/dev/null
+mbsync <SYNC_CHANNEL> && mu index
 ```
 
 若 shell 不支持 `**`，改用：
 
 ```bash
-rm -f ~/Mail/IWhale/*/.lock ~/Mail/IWhale/*/*/.lock 2>/dev/null
+rm -f ~/Mail/<MAILDIR_ROOT>/*/.lock ~/Mail/<MAILDIR_ROOT>/*/*/.lock 2>/dev/null
 ```
 
 ## 发送能力（进阶）

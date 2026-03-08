@@ -48,7 +48,7 @@ exchcli-link/
 本地邮件目录（示例）：
 
 ```text
-~/Mail/IWhale/
+~/Mail/<MAILDIR_ROOT>/
 ├── Archive/
 │   ├── cur
 │   ├── new
@@ -71,6 +71,56 @@ exchcli-link/
 - `msmtp`（可选，发送能力）
 - `nc`（网络连通检查）
 
+### 4.1 使用 Homebrew 安装（macOS）
+
+安装核心组件：
+
+```bash
+brew install davmail isync mu
+```
+
+如果需要发送能力，再安装 `msmtp`：
+
+```bash
+brew install msmtp
+```
+
+启动 DavMail（默认使用 Homebrew service）：
+
+```bash
+# 后台服务（默认方式，推荐）
+brew services start davmail
+```
+
+仅在调试时使用前台运行：
+
+```bash
+davmail
+```
+
+升级后重启服务：
+
+```bash
+brew services restart davmail
+```
+
+查看服务状态与日志：
+
+```bash
+brew services list | grep davmail
+tail -f ~/Library/Logs/Homebrew/davmail.log
+```
+
+版本与路径检查：
+
+```bash
+brew list --versions davmail isync mu msmtp
+command -v davmail
+command -v mbsync
+command -v mu
+command -v msmtp
+```
+
 快速检查：
 
 ```bash
@@ -88,7 +138,7 @@ command -v nc
 ### 5.1 DavMail 配置（`~/.davmail.properties`）
 
 ```properties
-davmail.url=https://mail.iwhalecloud.com/EWS/Exchange.asmx
+davmail.url=https://mail.<EXCHANGE_DOMAIN>/EWS/Exchange.asmx
 davmail.mode=Base
 davmail.imapPort=11143
 davmail.smtpPort=11025
@@ -99,24 +149,24 @@ davmail.bindAddress=127.0.0.1
 ### 5.2 mbsync 配置（`~/.mbsyncrc`）
 
 ```ini
-IMAPAccount iwhale-account
+IMAPAccount <IMAP_ACCOUNT>
 Host 127.0.0.1
 Port 11143
-User 0027009092
-Pass <PASSWORD>
+User <EXCHANGE_USERNAME>
+Pass <EXCHANGE_PASSWORD>
 SSLType None
 AuthMechs LOGIN
 
-IMAPStore iwhale-remote
-Account iwhale-account
+IMAPStore <REMOTE_STORE>
+Account <IMAP_ACCOUNT>
 
-MaildirStore iwhale-local
-Path ~/Mail/IWhale/
-Inbox ~/Mail/IWhale/Inbox
+MaildirStore <LOCAL_STORE>
+Path ~/Mail/<MAILDIR_ROOT>/
+Inbox ~/Mail/<MAILDIR_ROOT>/Inbox
 
-Channel iwhale-sync
-Far :iwhale-remote:
-Near :iwhale-local:
+Channel <SYNC_CHANNEL>
+Far :<REMOTE_STORE>:
+Near :<LOCAL_STORE>:
 Patterns *
 Create Near
 SyncState *
@@ -128,35 +178,39 @@ SyncState *
 
 ## 6. 快速开始
 
-### 步骤 1：检查端口与配置
+### 步骤 1：安装依赖（Homebrew）
+
+若尚未安装，先执行 `4.1` 中的 Homebrew 安装命令。
+
+### 步骤 2：检查端口与配置
 
 ```bash
 nc -z 127.0.0.1 11143
 nc -z 127.0.0.1 11025
 test -f ~/.davmail.properties
 test -f ~/.mbsyncrc
-test -d ~/Mail/IWhale
+test -d ~/Mail/<MAILDIR_ROOT>
 ```
 
-### 步骤 2：执行同步并索引
+### 步骤 3：执行同步并索引
 
 ```bash
-mbsync iwhale-sync && mu index
+mbsync <SYNC_CHANNEL> && mu index
 ```
 
-### 步骤 3：JSON 搜索
+### 步骤 4：JSON 搜索
 
 ```bash
 mu find 'from:bob subject:"合同"' --format=json --limit=5
 ```
 
-### 步骤 4：读取正文
+### 步骤 5：读取正文
 
 ```bash
 mu view <msg_path> --format=plain
 ```
 
-### 步骤 5：发送邮件（可选）
+### 步骤 6：发送邮件（可选）
 
 ```bash
 printf "Subject: 测试邮件\n\n这是一封测试邮件。\n" | msmtp -h 127.0.0.1 -P 11025 recipient@example.com
@@ -258,8 +312,8 @@ printf "Subject: 测试邮件\n\n这是一封测试邮件。\n" | msmtp -h 127.0
 处理：
 
 ```bash
-rm -f ~/Mail/IWhale/*/.lock ~/Mail/IWhale/*/*/.lock 2>/dev/null
-mbsync iwhale-sync && mu index
+rm -f ~/Mail/<MAILDIR_ROOT>/*/.lock ~/Mail/<MAILDIR_ROOT>/*/*/.lock 2>/dev/null
+mbsync <SYNC_CHANNEL> && mu index
 ```
 
 ### 10.3 `mu find` 无结果

@@ -10,7 +10,7 @@ nc -z 127.0.0.1 11143
 nc -z 127.0.0.1 11025
 
 # health.maildir
-test -d ~/Mail/IWhale
+test -d ~/Mail/<MAILDIR_ROOT>
 
 # health.mu_db / diag.mu_info
 mu info
@@ -45,47 +45,47 @@ sed -n '/^IMAPAccount\|^Host\|^Port\|^User\|^Channel/p' ~/.mbsyncrc
 
 ```bash
 # sync.only
-mbsync iwhale-sync
+mbsync <SYNC_CHANNEL>
 
 # index.refresh
 mu index
 
 # sync.full
-mbsync iwhale-sync && mu index
+mbsync <SYNC_CHANNEL> && mu index
 
 # sync.unlock
-rm -f ~/Mail/IWhale/*/.lock ~/Mail/IWhale/*/*/.lock 2>/dev/null
+rm -f ~/Mail/<MAILDIR_ROOT>/*/.lock ~/Mail/<MAILDIR_ROOT>/*/*/.lock 2>/dev/null
 
 # sync.retry_locked
-rm -f ~/Mail/IWhale/*/.lock ~/Mail/IWhale/*/*/.lock 2>/dev/null && mbsync iwhale-sync && mu index
+rm -f ~/Mail/<MAILDIR_ROOT>/*/.lock ~/Mail/<MAILDIR_ROOT>/*/*/.lock 2>/dev/null && mbsync <SYNC_CHANNEL> && mu index
 
 # sync.pull_inbox_only (调试观察)
-mbsync iwhale-sync -V
+mbsync <SYNC_CHANNEL> -V
 
 # sync.dry_run
-mbsync -n -V iwhale-sync
+mbsync -n -V <SYNC_CHANNEL>
 ```
 
 ## D) Maildir 状态
 
 ```bash
 # maildir.list_folders
-ls -1 ~/Mail/IWhale
+ls -1 ~/Mail/<MAILDIR_ROOT>
 
 # maildir.inbox_new_count
-ls -A ~/Mail/IWhale/Inbox/new | wc -l
+ls -A ~/Mail/<MAILDIR_ROOT>/Inbox/new | wc -l
 
 # maildir.inbox_cur_count
-ls -A ~/Mail/IWhale/Inbox/cur | wc -l
+ls -A ~/Mail/<MAILDIR_ROOT>/Inbox/cur | wc -l
 
 # maildir.folder_new_count
-ls -A ~/Mail/IWhale/<folder>/new | wc -l
+ls -A ~/Mail/<MAILDIR_ROOT>/<folder>/new | wc -l
 
 # maildir.folder_cur_count
-ls -A ~/Mail/IWhale/<folder>/cur | wc -l
+ls -A ~/Mail/<MAILDIR_ROOT>/<folder>/cur | wc -l
 
 # maildir.disk_usage
-du -sh ~/Mail/IWhale
+du -sh ~/Mail/<MAILDIR_ROOT>
 ```
 
 ## E) 检索（mu find JSON）
@@ -196,7 +196,7 @@ mu fields
 mu find --help
 
 # diag.mbsync_verbose
-mbsync -V iwhale-sync
+mbsync -V <SYNC_CHANNEL>
 ```
 
 如果本机参数风格不同，先运行对应工具的 `--help`，再按本机版本调整。

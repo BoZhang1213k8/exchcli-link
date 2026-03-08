@@ -192,11 +192,13 @@ test -f ~/.mbsyncrc
 test -d ~/Mail/<MAILDIR_ROOT>
 ```
 
-### 步骤 3：执行同步并索引
+### 步骤 3：执行增量同步并索引
 
 ```bash
 mbsync <SYNC_CHANNEL> && mu index
 ```
+
+说明：`mbsync` 默认是增量同步；文档里旧称 `sync.full` 的动作仅为兼容命名，推荐使用 `sync.incremental` / `sync.incremental_and_index`。
 
 ### 步骤 4：JSON 搜索
 
@@ -228,7 +230,7 @@ printf "Subject: 测试邮件\n\n这是一封测试邮件。\n" | msmtp -h 127.0
 - **B. 配置检查**
   - `~/.davmail.properties`、`~/.mbsyncrc` 存在与关键字段
 - **C. 同步与索引**
-  - `sync.only`、`sync.full`、`index.refresh`、`sync.retry_locked`
+  - `sync.incremental`、`sync.incremental_and_index`、`index.refresh`、`sync.retry_locked`
 - **D. Maildir 状态**
   - 目录列表、`new/cur` 计数、磁盘占用
 - **E. 检索（mu find JSON）**
@@ -247,6 +249,7 @@ printf "Subject: 测试邮件\n\n这是一封测试邮件。\n" | msmtp -h 127.0
 ### 8.1 标准“同步-检索-读取-总结”
 
 1. `sync.full`
+   （推荐新名：`sync.incremental_and_index`）
 2. `mail.search`
 3. `mail.view_plain`（或 `mail.view_snippet`）
 4. 输出结构化总结（发件人/主题/时间/待办/风险）

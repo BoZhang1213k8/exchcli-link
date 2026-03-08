@@ -44,13 +44,19 @@ sed -n '/^IMAPAccount\|^Host\|^Port\|^User\|^Channel/p' ~/.mbsyncrc
 ## C) 同步与索引
 
 ```bash
-# sync.only
+# sync.incremental (recommended)
+mbsync <SYNC_CHANNEL>
+
+# sync.only (alias)
 mbsync <SYNC_CHANNEL>
 
 # index.refresh
 mu index
 
-# sync.full
+# sync.incremental_and_index (recommended)
+mbsync <SYNC_CHANNEL> && mu index
+
+# sync.full (alias)
 mbsync <SYNC_CHANNEL> && mu index
 
 # sync.unlock

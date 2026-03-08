@@ -53,9 +53,11 @@ description: 通过 DavMail + mbsync + mu 打通 Exchange CLI 邮件工作流，
 
 | 原语 ID | 作用 | 命令模板 |
 | --- | --- | --- |
-| `sync.only` | 执行远程到本地同步 | `mbsync <SYNC_CHANNEL>` |
+| `sync.incremental` | 执行远程到本地增量同步（推荐） | `mbsync <SYNC_CHANNEL>` |
+| `sync.only` | 与 `sync.incremental` 等价（兼容别名） | `mbsync <SYNC_CHANNEL>` |
 | `index.refresh` | 重建 mu 索引 | `mu index` |
-| `sync.full` | 同步并索引 | `mbsync <SYNC_CHANNEL> && mu index` |
+| `sync.incremental_and_index` | 增量同步并更新索引（推荐） | `mbsync <SYNC_CHANNEL> && mu index` |
+| `sync.full` | 与 `sync.incremental_and_index` 等价（兼容别名） | `mbsync <SYNC_CHANNEL> && mu index` |
 | `sync.unlock` | 清理锁文件 | `rm -f ~/Mail/<MAILDIR_ROOT>/*/.lock ~/Mail/<MAILDIR_ROOT>/*/*/.lock 2>/dev/null` |
 | `sync.retry_locked` | 锁冲突后恢复并重试 | `rm -f ~/Mail/<MAILDIR_ROOT>/*/.lock ~/Mail/<MAILDIR_ROOT>/*/*/.lock 2>/dev/null && mbsync <SYNC_CHANNEL> && mu index` |
 | `sync.pull_inbox_only` | 仅同步 Inbox（按命名匹配） | `mbsync <SYNC_CHANNEL> -V` |

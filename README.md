@@ -1,6 +1,6 @@
 # ExchCLI-Link
 
-基于 `DavMail + mbsync + mu + msmtp` 的 Exchange CLI 能力桥接层。  
+基于 `DavMail + mbsync + mu + msmtp + himalaya` 的 Exchange CLI 能力桥接层。  
 目标是把 Exchange 邮件访问统一为本地可审计、可编排、可恢复的原语集合，便于 Agent 或自动化脚本调用。
 
 ---
@@ -25,8 +25,14 @@
    - 将远程邮箱同步到本地 Maildir
 3. **Index/Search 层（mu）**
    - 对 Maildir 建索引，提供 JSON 检索
-4. **Send 层（msmtp）**
-   - 通过 DavMail 本地 SMTP 发信
+4. **Send 层（msmtp/himalaya）**
+   - `msmtp`：通过 DavMail 本地 SMTP 发信
+   - `himalaya`：发送并稳定保存到 Sent
+
+轻量模式：
+
+- `DavMail + himalaya`：可直接收发（send + receive）
+- `DavMail + mbsync + mu`：增强本地索引检索与批处理能力
 
 推荐链路：
 
@@ -68,7 +74,8 @@ exchcli-link/
 - `davmail`
 - `mbsync`（来自 `isync`）
 - `mu`
-- `msmtp`（可选，发送能力）
+- `msmtp`（可选，SMTP 发送能力）
+- `himalaya`（推荐发送能力，可稳定保存到 Sent）
 - `nc`（网络连通检查）
 
 ### 4.1 使用 Homebrew 安装（macOS）
@@ -79,10 +86,10 @@ exchcli-link/
 brew install davmail isync mu
 ```
 
-如果需要发送能力，再安装 `msmtp`：
+如果需要发送能力，安装 `msmtp` 与 `himalaya`：
 
 ```bash
-brew install msmtp
+brew install msmtp himalaya
 ```
 
 启动 DavMail（默认使用 Homebrew service）：
@@ -114,11 +121,12 @@ tail -f ~/Library/Logs/Homebrew/davmail.log
 版本与路径检查：
 
 ```bash
-brew list --versions davmail isync mu msmtp
+brew list --versions davmail isync mu msmtp himalaya
 command -v davmail
 command -v mbsync
 command -v mu
 command -v msmtp
+command -v himalaya
 ```
 
 快速检查：
@@ -128,6 +136,7 @@ command -v davmail
 command -v mbsync
 command -v mu
 command -v msmtp
+command -v himalaya
 command -v nc
 ```
 
@@ -203,7 +212,7 @@ mbsync <SYNC_CHANNEL> && mu index
 ### 步骤 4：JSON 搜索
 
 ```bash
-mu find 'from:bob subject:"合同"' --format=json --limit=5
+mu find 'from:bob subject:"合同"' --format=json -n 5
 ```
 
 ### 步骤 5：读取正文
@@ -215,7 +224,7 @@ mu view <msg_path> --format=plain
 ### 步骤 6：发送邮件（可选）
 
 ```bash
-printf "Subject: 测试邮件\n\n这是一封测试邮件。\n" | msmtp -h 127.0.0.1 -P 11025 recipient@example.com
+printf "From: sender@example.com\nTo: recipient@example.com\nSubject: 测试邮件\n\n这是一封测试邮件。\n" | himalaya message send
 ```
 
 ---
@@ -237,8 +246,8 @@ printf "Subject: 测试邮件\n\n这是一封测试邮件。\n" | msmtp -h 127.0
   - `from/to/cc/subject/body/msgid/maildir/flag/date` 等维度
 - **F. 读取与提取（mu view）**
   - 正文、头部片段、尾部片段、链接提取、邮箱提取
-- **G. 发送（msmtp）**
-  - 基础发送、指定发件人、cc/bcc、RFC822 文件发送
+- **G. 发送（msmtp/himalaya）**
+  - `msmtp` 基础发送与 SMTP 校验，`himalaya` 发送并保存到 Sent
 - **H. 诊断与调试**
   - `mu fields`、`mu find --help`、`mbsync -V`
 
@@ -280,7 +289,7 @@ printf "Subject: 测试邮件\n\n这是一封测试邮件。\n" | msmtp -h 127.0
   "status": "ok|error",
   "stage": "health|sync|search|view|send|diag",
   "primitive": "mail.search",
-  "command": "mu find 'subject:\"合同\"' --format=json --limit=5",
+  "command": "mu find 'subject:\"合同\"' --format=json -n 5",
   "summary": "5 results returned",
   "next_action": "mail.view_plain"
 }
@@ -332,9 +341,14 @@ mbsync <SYNC_CHANNEL> && mu index
 
 处理顺序：
 
-1. `msmtp --serverinfo --host=127.0.0.1 --port=11025`
+1. `msmtp -a default --serverinfo`
 2. 确认 DavMail SMTP 已监听
 3. 检查邮件头格式（`From/To/Subject`）
+4. 若报 `support for authentication method NTLM is not compiled in`，说明本机 `msmtp` 不支持 NTLM，改用 `himalaya message send` 或调整 `msmtp` 认证方式
+5. 避免使用 `msmtp -P` 发信（`-P` 是 `--pretend`，不会真实发送）
+6. 若使用 `--host/--port`，需同时显式提供认证参数；否则优先使用 `-a default`
+
+说明：`msmtp` 的认证配置只影响发送，不影响 `mbsync` 的收件同步（IMAP 链路独立）。
 
 ---
 
